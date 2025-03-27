@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            height: 100%;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 15px;
+            background-color: #34495e;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: 250px;
+            width: 100%;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        /* Search Form Styles */
+        #bookingsFormContainer {
+            margin-left: 5%;
+            padding: 20px;
+            width: 85%;
+            background-color: #ffffff;
+            box-shadow: 5px 0px 5px rgba(255, 0, 0, 0.1);
+        }
+
+        /* Form Styling */
+        .form-container {
+            max-width: 500px;
+            width: 90%;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .form-container input,
+        .form-container select,
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+
+        .form-container button {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+
+        .success-message {
+            color: green;
+            font-weight: bold;
+            text-align: center;
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #d4edda;
+            padding: 10px 20px;
+            border-radius: 5px;
+            opacity: 1;
+            transition: opacity 1s ease-in-out;
+        }
+
+        /* Hide form sections initially */
+        #addBusFormContainer, #bookingsFormContainer {
+            display: none;
+        }
+
+        /* Additional Styling for Booking Table */
+        #bookingResults {
+            display: none; /* Initially hidden */
+        }
+
+        table {
+            width: 60%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .action-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .action-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Employee Dashboard</h2>
+            <button onclick="showAddBusForm()">Add Bus Details</button>
+            <button onclick="showBookings()">Show All Bookings</button>
+            <button id="logoutButton">Logout</button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Add Bus Form -->
+            <div class="form-container" id="addBusFormContainer">
+                <h2>Add New Bus</h2>
+                <form id="addBusForm">
+                    <label for="busName">Bus Name</label>
+                    <input type="text" id="busName" name="busName" required>
+                    
+                    <label for="busType">Bus Type</label>
+                    <input type="text" id="busType" name="busType" required>
+                    
+                    <label for="totalSeats">Total Seats</label>
+                    <input type="number" id="totalSeats" name="totalSeats" required>
+
+                    <!-- Dropdown for Departure Location -->
+                    <label for="departureLocation">Departure Location</label>
+                    <select id="departureLocation" name="departureLocation">
+                        <option value="">Select Departure Location</option>
+                        <option value="Dhaka">Dhaka</option>
+                        <option value="Chattogram">Chattogram</option>
+                        <option value="Khulna">Khulna</option>
+                        <option value="Rajshahi">Rajshahi</option>
+                        <option value="Barishal">Barishal</option>
+                        <option value="Sylhet">Sylhet</option>
+                        <option value="Rangpur">Rangpur</option>
+                        <option value="Mymensingh">Mymensingh</option>
+                        <option value="Cumilla">Cumilla</option>
+                        <option value="Noakhali">Noakhali</option>
+                        <option value="Feni">Feni</option>
+                        <option value="Brahmanbaria">Brahmanbaria</option>
+                        <option value="Habiganj">Habiganj</option>
+                        <option value="Sunamganj">Sunamganj</option>
+                        <option value="Moulvibazar">Moulvibazar</option>
+                        <option value="Narsingdi">Narsingdi</option>
+                        <option value="Kishoreganj">Kishoreganj</option>
+                        <option value="Tangail">Tangail</option>
+                        <option value="Jamalpur">Jamalpur</option>
+                        <option value="Sherpur">Sherpur</option>
+                        <option value="Netrokona">Netrokona</option>
+                        <option value="Narayanganj">Narayanganj</option>
+                        <option value="Munshiganj">Munshiganj</option>
+                        <option value="Gazipur">Gazipur</option>
+                        <option value="Madaripur">Madaripur</option>
+                        <option value="Faridpur">Faridpur</option>
+                        <option value="Rajbari">Rajbari</option>
+                        <option value="Gopalganj">Gopalganj</option>
+                        <option value="Shariatpur">Shariatpur</option>
+                        <option value="Patuakhali">Patuakhali</option>
+                        <option value="Bhola">Bhola</option>
+                        <option value="Jhalokathi">Jhalokathi</option>
+                        <option value="Barguna">Barguna</option>
+                        <option value="Pirojpur">Pirojpur</option>
+                        <option value="Bagerhat">Bagerhat</option>
+                        <option value="Chuadanga">Chuadanga</option>
+                        <option value="Jashore">Jashore</option>
+                        <option value="Jhenaidah">Jhenaidah</option>
+                        <option value="Magura">Magura</option>
+                        <option value="Meherpur">Meherpur</option>
+                        <option value="Narail">Narail</option>
+                        <option value="Satkhira">Satkhira</option>
+                        <option value="Bogura">Bogura</option>
+                        <option value="Joypurhat">Joypurhat</option>
+                        <option value="Naogaon">Naogaon</option>
+                        <option value="Natore">Natore</option>
+                        <option value="Pabna">Pabna</option>
+                        <option value="Sirajganj">Sirajganj</option>
+                        <option value="Gaibandha">Gaibandha</option>
+                        <option value="Kurigram">Kurigram</option>
+                        <option value="Lalmonirhat">Lalmonirhat</option>
+                        <option value="Nilphamari">Nilphamari</option>
+                        <option value="Panchagarh">Panchagarh</option>
+                        <option value="Thakurgaon">Thakurgaon</option>
+                        <option value="Dinajpur">Dinajpur</option>
+                        <option value="Cox's Bazar">Cox's Bazar</option>
+                        <option value="Bandarban">Bandarban</option>
+                        <option value="Khagrachari">Khagrachari</option>
+                        <option value="Rangamati">Rangamati</option>
+                    </select>
+
+                    <!-- Dropdown for Destination Location -->
+                    <label for="destinationLocation">Destination Location</label>
+                    <select id="destinationLocation" name="destinationLocation">
+                        <option value="">Select Departure Location</option>
+                        <option value="Dhaka">Dhaka</option>
+                        <option value="Chattogram">Chattogram</option>
+                        <option value="Khulna">Khulna</option>
+                        <option value="Rajshahi">Rajshahi</option>
+                        <option value="Barishal">Barishal</option>
+                        <option value="Sylhet">Sylhet</option>
+                        <option value="Rangpur">Rangpur</option>
+                        <option value="Mymensingh">Mymensingh</option>
+                        <option value="Cumilla">Cumilla</option>
+                        <option value="Noakhali">Noakhali</option>
+                        <option value="Feni">Feni</option>
+                        <option value="Brahmanbaria">Brahmanbaria</option>
+                        <option value="Habiganj">Habiganj</option>
+                        <option value="Sunamganj">Sunamganj</option>
+                        <option value="Moulvibazar">Moulvibazar</option>
+                        <option value="Narsingdi">Narsingdi</option>
+                        <option value="Kishoreganj">Kishoreganj</option>
+                        <option value="Tangail">Tangail</option>
+                        <option value="Jamalpur">Jamalpur</option>
+                        <option value="Sherpur">Sherpur</option>
+                        <option value="Netrokona">Netrokona</option>
+                        <option value="Narayanganj">Narayanganj</option>
+                        <option value="Munshiganj">Munshiganj</option>
+                        <option value="Gazipur">Gazipur</option>
+                        <option value="Madaripur">Madaripur</option>
+                        <option value="Faridpur">Faridpur</option>
+                        <option value="Rajbari">Rajbari</option>
+                        <option value="Gopalganj">Gopalganj</option>
+                        <option value="Shariatpur">Shariatpur</option>
+                        <option value="Patuakhali">Patuakhali</option>
+                        <option value="Bhola">Bhola</option>
+                        <option value="Jhalokathi">Jhalokathi</option>
+                        <option value="Barguna">Barguna</option>
+                        <option value="Pirojpur">Pirojpur</option>
+                        <option value="Bagerhat">Bagerhat</option>
+                        <option value="Chuadanga">Chuadanga</option>
+                        <option value="Jashore">Jashore</option>
+                        <option value="Jhenaidah">Jhenaidah</option>
+                        <option value="Magura">Magura</option>
+                        <option value="Meherpur">Meherpur</option>
+                        <option value="Narail">Narail</option>
+                        <option value="Satkhira">Satkhira</option>
+                        <option value="Bogura">Bogura</option>
+                        <option value="Joypurhat">Joypurhat</option>
+                        <option value="Naogaon">Naogaon</option>
+                        <option value="Natore">Natore</option>
+                        <option value="Pabna">Pabna</option>
+                        <option value="Sirajganj">Sirajganj</option>
+                        <option value="Gaibandha">Gaibandha</option>
+                        <option value="Kurigram">Kurigram</option>
+                        <option value="Lalmonirhat">Lalmonirhat</option>
+                        <option value="Nilphamari">Nilphamari</option>
+                        <option value="Panchagarh">Panchagarh</option>
+                        <option value="Thakurgaon">Thakurgaon</option>
+                        <option value="Dinajpur">Dinajpur</option>
+                        <option value="Cox's Bazar">Cox's Bazar</option>
+                        <option value="Bandarban">Bandarban</option>
+                        <option value="Khagrachari">Khagrachari</option>
+                        <option value="Rangamati">Rangamati</option>
+                    </select>
+                    <!-- Departure Time -->
+                    <label for="departureTime">Departure Time</label>
+                    <input type="time" id="departureTime" name="departureTime" required>
+
+                    <!-- Arrival Time -->
+                    <label for="arrivalTime">Arrival Time</label>
+                    <input type="time" id="arrivalTime" name="arrivalTime" required>
+
+                    <!-- Fare Field -->
+                    <label for="fare">Fare</label>
+                    <input type="number" id="fare" name="fare" required>
+
+                    <button type="submit">Add Bus</button>
+                </form>
+                <div id="successMessage" class="success-message" style="display:none;">Bus added successfully.</div>
+            </div>
+            <div id="bookingsFormContainer" style="display: none;">
+                <h2>Bookings</h2>
+                <br>
+                <table border="1" id="bookingsTable">
+                    <thead>
+                        <tr>
+                            <th>Departure Location</th>
+                            <th>Destination Location</th>
+                            <th>Travel Date</th>
+                            <th>Payment Amount</th>
+                            <th>Seat Number</th>
+                            <th>Bus Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be inserted here dynamically -->
+                    </tbody>
+                </table>
+            </div>            
+    <script>
+        // Handle form visibility
+        function showAddBusForm() {
+            document.getElementById('addBusFormContainer').style.display = 'block';
+            document.getElementById('bookingsFormContainer').style.display = 'none'; // Hide bookings section
+        }
+
+        function showBookings() {
+            document.getElementById('bookingsFormContainer').style.display = 'block';
+            document.getElementById('addBusFormContainer').style.display = 'none'; // Hide Add Bus Form section
+        }
+        // Handle bus form submission
+        document.getElementById('addBusForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Collect the form data
+            const busData = {
+                busName: document.getElementById('busName').value,
+                busType: document.getElementById('busType').value,
+                totalSeats: document.getElementById('totalSeats').value,
+                departureLocation: document.getElementById('departureLocation').value,
+                destinationLocation: document.getElementById('destinationLocation').value,
+                departureTime: document.getElementById('departureTime').value,
+                arrivalTime: document.getElementById('arrivalTime').value,
+                fare: document.getElementById('fare').value
+            };
+
+            console.log("Sending bus data:", busData);  // Debugging
+
+            // Send the data to the backend via an API request
+            fetch('/api/add-bus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(busData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display a success message
+                    const successMessage = document.getElementById('successMessage');
+                    successMessage.style.display = 'block';
+
+                    // Clear input fields
+                    document.getElementById('addBusForm').reset();
+
+                    // Hide success message after 2 seconds (2000 milliseconds)
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 2000); // 2000ms = 2 seconds
+                } else {
+                    // Handle error
+                    alert('Error adding bus');
+                }
+            });
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            fetch('/logout', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed');
+                    }
+                });
+        });
+    
+        // Fetch all bookings initially when the page loads
+        async function loadAllBookings() {
+            try {
+                const response = await fetch("/api/bookings");
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    displayBookings(data);  // Display all bookings initially
+                } else {
+                    console.error("Error: Invalid data format received.");
+                }
+            } catch (error) {
+                console.error("Error fetching bookings:", error);
+            }
+        }
+
+        // Call this function on page load
+        window.onload = loadAllBookings;                                
+        
+        function displayBookings(bookings) {
+            const tableBody = document.querySelector("#bookingsTable tbody");
+            tableBody.innerHTML = "";  // Clear previous data
+        
+            if (!Array.isArray(bookings) || bookings.length === 0) {
+                tableBody.innerHTML = "<tr><td colspan='7'>No bookings found</td></tr>";  // Display 'No bookings found' if no results
+                return;
+            }
+        
+            bookings.forEach(booking => {
+                const seatNumber = booking.seat_number || "N/A";  // If seat_number is missing, show "N/A"
+                const busName = booking.bus_name || "N/A";  // If bus_name is missing, show "N/A"
+                
+                const row = document.createElement("tr");
+        
+                // Add the booking information to the row
+                row.innerHTML = `
+                    <td contenteditable="true" onBlur="editBooking(${booking.id}, this, 'departure_location')">${booking.departure_location}</td>
+                    <td contenteditable="true" onBlur="editBooking(${booking.id}, this, 'destination_location')">${booking.destination_location}</td>
+                    <td contenteditable="true" onBlur="editBooking(${booking.id}, this, 'travel_date')">${booking.travel_date}</td>
+                    <td>${booking.payment_amount}</td>
+                    <td>${seatNumber}</td>
+                    <td>${busName}</td> <!-- Added Bus Name -->
+                    <td>
+                        <button onclick="deleteBooking(${booking.id}, this)">Delete</button>
+                    </td>
+                `;
+                
+                // Append the row to the table body
+                tableBody.appendChild(row);
+            });
+        }                                                                           
+
+        // Edit booking data in the database
+        async function editBooking(id, element, field) {
+            const newValue = element.innerText.trim();  // Trim whitespace from the new value
+
+            // Check if the new value is different from the original value
+            if (newValue === "" || newValue === element.getAttribute('data-original-value')) {
+                return;  // If no change, exit without making an API call
+            }
+
+            try {
+                const response = await fetch('/api/bookings/edit', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, field, value: newValue })  // Sending the id, field, and new value
+                });
+
+                const result = await response.json();
+
+                // Show the result message from the backend
+                alert(result.message);
+
+                // Store the updated value in the element's data attribute to avoid unnecessary future updates
+                element.setAttribute('data-original-value', newValue);
+            } catch (error) {
+                console.error("Error editing booking:", error);
+            }
+        }
+
+        // Delete booking from database and UI
+        async function deleteBooking(id, button) {
+            try {
+                const response = await fetch('/api/bookings/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const result = await response.json();
+                alert(result.message);
+                button.closest("tr").remove(); // Remove row from UI
+            } catch (error) {
+                console.error("Error deleting booking:", error);
+            }
+        }               
+    </script>
+</body>
+</html>

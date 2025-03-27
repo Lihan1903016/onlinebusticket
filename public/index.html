@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="navbar">
+        <img src="/images/Bus Logo.jpg" alt="Logo" class="logo">
+        <button onclick="openPopup('signinPopup')">Sign In</button>
+        <button onclick="openPopup('signupPopup')">Sign Up</button>
+    </div>
+
+    <!-- Warning Message (initially hidden) -->
+    <div id="loginWarning" class="warning" style="display: none;">
+        <p>Please sign in first to access the features.</p>
+    </div>
+
+    <div class="hero">
+        <p>For any kind of query, Call us at this number: 
+            <a href="tel:+8801718525603">+8801718525603</a>
+        </p>
+    </div>           
+
+    <!-- Sign In Popup -->
+    <div id="signinPopup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="closePopup('signinPopup')">&times;</span>
+            <h2>Sign In</h2>
+            <input type="email" id="signinEmail" placeholder="Email">
+            <input type="password" id="signinPassword" placeholder="Password">
+            <button onclick="signIn(event)">Sign In</button>
+            <p>Don't have an account? <a href="#" onclick="switchPopup('signinPopup', 'signupPopup')">Sign Up</a></p>
+            <p id="signinError" class="error"></p>
+        </div>
+    </div>
+
+    <!-- Sign Up Popup -->
+    <div id="signupPopup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="closePopup('signupPopup')">&times;</span>
+            <h2>Sign Up</h2>
+            <input type="text" id="signupName" placeholder="Full Name">
+            <input type="email" id="signupEmail" placeholder="Email">
+            <input type="password" id="signupPassword" placeholder="Password">
+            
+            <label for="role">Role:</label>
+            <select id="signupRole">
+                <option value="user">User</option>
+                <option value="employee">Employee</option>
+            </select>
+
+            <button onclick="signUp(event)">Sign Up</button>
+            <p>Already have an account? <a href="#" onclick="switchPopup('signupPopup', 'signinPopup')">Sign In</a></p>
+            <p id="signupError" class="error"></p>
+        </div>
+    </div>
+
+    <script>
+        // Display warning message if required
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('warning') && urlParams.get('warning') === 'true') {
+                document.getElementById("loginWarning").style.display = "block";
+            }
+        };
+
+        // Helper function to open popups
+        function openPopup(popupId) {
+            console.log(`Opening popup: ${popupId}`);  // Debugging line
+            const popup = document.getElementById(popupId);
+            if (popup) {
+                popup.style.display = 'block';
+            } else {
+                console.log(`Popup with ID ${popupId} not found.`);
+            }
+        }
+
+        // Helper function to close popups
+        function closePopup(popupId) {
+            console.log(`Closing popup: ${popupId}`);  // Debugging line
+            const popup = document.getElementById(popupId);
+            if (popup) {
+                popup.style.display = 'none';
+            } else {
+                console.log(`Popup with ID ${popupId} not found.`);
+            }
+        }
+
+        // Helper function to switch between popups
+        function switchPopup(fromPopupId, toPopupId) {
+            console.log(`Switching popups: ${fromPopupId} -> ${toPopupId}`); // Debugging line
+            closePopup(fromPopupId);  // Close the first popup
+            openPopup(toPopupId);     // Open the second popup
+        }
+
+        // Sign In function (AJAX)
+        function signIn(event) {
+            event.preventDefault();  // Prevent page reload
+
+            const email = document.getElementById('signinEmail').value;
+            const password = document.getElementById('signinPassword').value;
+
+            // Send the sign-in request via Fetch API
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;  // Redirect based on the response
+                } else {
+                    document.getElementById('signinError').textContent = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Sign Up function (AJAX)
+        function signUp(event) {
+            event.preventDefault();  // Prevent page reload
+
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const role = document.getElementById('signupRole').value;
+
+            // Clear previous errors
+            document.getElementById('signupError').textContent = '';
+
+            // Send signup data to server
+            fetch('/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, role }),
+            })
+            .then(response => response.json()) // Parse JSON response from the server
+            .then(data => {
+                console.log('Response Data:', data);  // Check the data from the server
+                
+                if (data.success) {
+                    // On success, switch to the sign-in popup
+                    switchPopup('signupPopup', 'signinPopup');
+                } else {
+                    // Display the error message returned from the server
+                    document.getElementById('signupError').textContent = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle any errors that occur during the request
+                document.getElementById('signupError').textContent = 'An error occurred. Please try again later.';
+            });
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

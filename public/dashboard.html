@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <title>Bus Seat Booking</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+        body {
+            display: flex;
+            margin: 0;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 20%;
+            background: #343a40;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #sidebar button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: 600;
+            background: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        #sidebar button:hover {
+            background: #0056b3;
+        }
+
+        /* Main Content */
+        #main-container {
+            flex: 1;
+            padding: 25px;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        /* Logout Button */
+        #logoutButton {
+            background: #dc3545;
+            border: none;
+            padding: 10px 35px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+        }
+
+        #logoutButton:hover {
+            background: #c82333;
+        }
+
+        /* Main Container */
+        #main-container {
+            display: flex;
+            width: 100%; /* Take full width */
+            max-width: 1200px; /* Limit the max width */
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 0 auto; /* Center the container */
+        }
+
+        /* Form Container */
+        #container {
+            background-color: rgba(255, 255, 255, 0.9);
+            width: 500px;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Seats Container (Hidden Initially) */
+        #seats-container {
+            width: 45%;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            display: none; /* Hidden by default */
+        }
+
+        /* Seats Grid */
+        #seats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr) 40px repeat(2, 1fr);
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* Seat Button Styles */
+        button.seat {
+            width: 50px;
+            height: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #ccc;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #travelDate {
+            width: 30%;
+            padding: 12px;
+        }
+
+        /* Seat Status Colors */
+        .available { background-color: #28a745; color: white; } 
+        .booked { background-color: #dc3545; color: white; cursor: not-allowed; } 
+        .selected { background-color: #ffc107 !important; color: black; } 
+
+        .aisle-gap {
+            width: 40px;
+            height: 50px;
+        }
+
+        .empty-seat {
+            width: 50px;
+            height: 50px;
+            visibility: hidden;
+        }
+
+        /* Form Input Fields */
+        input, select {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            transition: all 0.2s ease-in-out;
+            box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Input Focus Effect */
+        input:focus, select:focus {
+            border-color: #007bff;
+            box-shadow: 0px 2px 8px rgba(0, 123, 255, 0.2);
+            outline: none;
+        }
+
+        /* Label Styling */
+        label {
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+            display: block;
+            margin-bottom: 6px;
+            text-align: left;
+        }
+
+        /* Button Styling */
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+        /* Show Seats Container (When Seats Load) */
+        .show-seats {
+            display: block !important;
+        }
+
+        .success-message {
+            color: green;
+            font-weight: bold;
+        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            #main-container {
+                flex-direction: column;
+                align-items: center;
+                width: 95%;
+            }
+
+            #container, #seats-container {
+                width: 100%;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Menu -->
+    <div id="sidebar">
+        <button onclick="showSection('bookTicket')">Book Your Ticket</button>
+        <button onclick="showSection('boughtTickets')">Your Bought Tickets</button>
+        <button onclick="showSection('liveLocation')">See Your Live Location</button>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-container">
+        <button id="logoutButton">Logout</button>
+
+        <div id="bookTicket" class="content-section active">
+            <div id="main-container">
+                <!-- Left side: Booking form -->
+                <div id="container">
+                    <h1>Bus Seat Booking</h1>
+        
+                    <label for="departure">Departure:</label>
+                    <select id="departure" onchange="filterBuses()">
+                        <option value="">-- Select Departure --</option>
+                    </select>
+        
+                    <label for="destination">Destination:</label>
+                    <select id="destination" onchange="filterBuses()">
+                        <option value="">-- Select Destination --</option>
+                    </select>
+        
+                    <br>
+        
+                    <label for="busSelect">Select Bus:</label>
+                    <select id="busSelect" onchange="handleBusSelection()">
+                        <option value="">-- Select a Bus --</option>
+                    </select>
+        
+                    <br>
+        
+                    <label for="travelDate">Select Date:</label>
+                    <input type="date" id="travelDate" onchange="getSeats()">
+        
+                    <br>
+        
+                    <label for="paymentAmount">Fare Amount:</label>
+                    <input type="number" id="paymentAmount" placeholder="Amount" readonly>
+        
+                    <br>
+                    <br>
+                    <button onclick="bookSeat()">Book Selected Seat</button>
+                </div>
+        
+                <!-- Right side: Seats layout -->
+                <div id="seats-container">
+                    <h2>Select a Seat</h2>
+                    <div id="seats"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="boughtTickets" class="content-section">
+            <h1>Your Bought Tickets</h1>
+            <p>Here you can view your past ticket bookings.</p>
+        </div>
+
+        <div id="liveLocation" class="content-section">
+            <h1>See Your Live Location</h1>
+            <p>Track your bus in real time.</p>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            fetch('/logout', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed');
+                    }
+                });
+        });
+        let selectedSeatNumber = null;
+        let allBuses = [];
+
+        // 64 Districts List
+        const districts = [
+            "Dhaka", "Chattogram", "Khulna", "Rajshahi", "Barishal", "Sylhet", "Rangpur", "Mymensingh",
+            "Cumilla", "Noakhali", "Feni", "Brahmanbaria", "Habiganj", "Sunamganj", "Moulvibazar",
+            "Narsingdi", "Kishoreganj", "Tangail", "Jamalpur", "Sherpur", "Netrokona", "Narayanganj",
+            "Munshiganj", "Gazipur", "Madaripur", "Faridpur", "Rajbari", "Gopalganj", "Shariatpur",
+            "Patuakhali", "Bhola", "Jhalokathi", "Barguna", "Pirojpur", "Bagerhat", "Chuadanga",
+            "Jashore", "Jhenaidah", "Magura", "Meherpur", "Narail", "Satkhira", "Bogura", "Joypurhat",
+            "Naogaon", "Natore", "Pabna", "Sirajganj", "Gaibandha", "Kurigram", "Lalmonirhat",
+            "Nilphamari", "Panchagarh", "Thakurgaon", "Dinajpur", "Cox's Bazar", "Bandarban",
+            "Khagrachari", "Rangamati"
+        ];
+
+        // Populate Districts in Dropdowns
+        function populateDistricts() {
+            let departureSelect = document.getElementById('departure');
+            let destinationSelect = document.getElementById('destination');
+
+            districts.forEach(district => {
+                let option1 = document.createElement('option');
+                option1.value = district;
+                option1.innerText = district;
+                departureSelect.appendChild(option1);
+
+                let option2 = document.createElement('option');
+                option2.value = district;
+                option2.innerText = district;
+                destinationSelect.appendChild(option2);
+            });
+        }
+
+        // Fetch all buses and store them
+        async function getBuses() {
+            try {
+                const response = await fetch('/api/get-buses');
+                if (!response.ok) throw new Error('Failed to fetch buses');
+
+                const data = await response.json();
+                if (data.success) {
+                    allBuses = data.buses; // Ensure we only store the buses array
+                    console.log("Fetched Buses:", allBuses);
+                } else {
+                    console.error('No buses found:', data.message);
+                    allBuses = []; // Reset to empty if no buses are found
+                }
+            } catch (error) {
+                console.error('Error fetching buses:', error);
+            }
+        }
+
+        // Filter buses based on departure & destination
+        function filterBuses() {
+            const departure = document.getElementById('departure').value;
+            const destination = document.getElementById('destination').value;
+            let busSelect = document.getElementById('busSelect');
+        
+            busSelect.innerHTML = '<option value="">-- Select a Bus --</option>';
+        
+            // Ensure both fields are selected before displaying buses
+            if (!departure || !destination) {
+                return; // Stops function execution if either is not selected
+            }
+        
+            allBuses.forEach(bus => {
+                if (bus.departure_location === departure && bus.destination_location === destination) {
+                    let option = document.createElement('option');
+                    option.value = bus.id;
+                    option.setAttribute('data-fare', bus.fare);
+                    option.innerText = `${bus.bus_name} (${bus.departure_location} to ${bus.destination_location})`;
+                    busSelect.appendChild(option);
+                }
+            });
+        }        
+
+        function handleBusSelection() {
+            const busSelect = document.getElementById('busSelect');
+            const selectedOption = busSelect.options[busSelect.selectedIndex];
+
+            if (selectedOption.value) {
+                const fare = selectedOption.getAttribute('data-fare');
+                document.getElementById('paymentAmount').value = fare || '';
+            } else {
+                document.getElementById('paymentAmount').value = '';
+            }
+            getSeats();
+        }
+
+        async function getSeats() {
+            const busId = document.getElementById('busSelect').value;
+            const travelDate = document.getElementById('travelDate').value;
+        
+            if (!busId || !travelDate) return;
+        
+            try {
+                const response = await fetch(`/api/get-seats?busId=${busId}&travelDate=${travelDate}`);
+                if (!response.ok) throw new Error('Failed to fetch seats');
+        
+                const data = await response.json();
+                let seatsDiv = document.getElementById('seats');
+                seatsDiv.innerHTML = '';
+        
+                // Ensure seats are sorted by seat_number to maintain order
+                data.seats.sort((a, b) => a.seat_number - b.seat_number);
+        
+                const totalSeats = data.seats.length; // Dynamic seat count
+                const seatsPerRow = 4; // Two seats per side of the aisle
+                const aisleIndex = 2;  // Position of the aisle
+                let seatsMap = Array(totalSeats).fill(null);
+        
+                // Map seat data into fixed positions
+                data.seats.forEach(seat => {
+                    seatsMap[seat.seat_number - 1] = seat; // Adjust for 0-based index
+                });
+        
+                // Render seats dynamically
+                let rowCount = Math.ceil(totalSeats / seatsPerRow);
+                for (let i = 0; i < rowCount; i++) {
+                    for (let j = 0; j < seatsPerRow; j++) {
+                        if (j === aisleIndex) {
+                            let aisleGap = document.createElement('div');
+                            aisleGap.classList.add('aisle-gap');
+                            seatsDiv.appendChild(aisleGap);
+                        }
+        
+                        let seatIndex = i * seatsPerRow + j;
+                        let seat = seatsMap[seatIndex];
+        
+                        if (seat) {
+                            let seatButton = document.createElement('button');
+                            seatButton.id = `seat-${seat.id}`;
+                            seatButton.innerText = seat.seat_number;
+                            seatButton.className = `seat ${seat.booked ? 'booked' : 'available'}`;
+                            seatButton.disabled = seat.booked;
+        
+                            if (!seat.booked) {
+                                seatButton.onclick = () => selectSeat(seat.id, seat.seat_number);
+                            }
+        
+                            seatsDiv.appendChild(seatButton);
+                        } else {
+                            let emptySeat = document.createElement('div');
+                            emptySeat.classList.add('empty-seat');
+                            seatsDiv.appendChild(emptySeat);
+                        }
+                    }
+                }
+                document.getElementById('seats-container').classList.add('show-seats');
+
+            } catch (error) {
+                console.error('Error fetching seats:', error);
+            }
+        }                        
+
+        function selectSeat(seatId, seatNumber) {
+            // Deselect previously selected seat (if any)
+            if (selectedSeatNumber !== null) {
+                const prevSelectedSeat = document.querySelector('.seat.selected');
+                if (prevSelectedSeat) prevSelectedSeat.classList.remove('selected');
+            }
+        
+            // Select new seat
+            selectedSeatNumber = seatNumber;
+            document.getElementById(`seat-${seatId}`).classList.add('selected');
+        }        
+
+        window.onload = async function() {
+            populateDistricts();
+            getBuses(); // Ensure buses are fetched before filtering
+        };
+
+        async function bookSeat() {
+            const busId = document.getElementById('busSelect').value;
+            const travelDate = document.getElementById('travelDate').value;
+            const paymentAmount = document.getElementById('paymentAmount').value;
+            const departure = document.getElementById('departure').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (!busId || !travelDate) {
+                alert("Please select a bus and a travel date.");
+                return;
+            }
+        
+            if (!selectedSeatNumber) { 
+                alert("Please select a seat before booking.");
+                return;
+            }
+        
+            if (!paymentAmount || paymentAmount <= 0) {
+                alert("Invalid payment amount.");
+                return;
+            }
+        
+            const bookingData = {
+                busId: parseInt(busId),
+                seatNumber: parseInt(selectedSeatNumber),
+                travelDate: travelDate,
+                paymentAmount: parseFloat(paymentAmount),
+                departure: departure,
+                destination: destination
+            };
+        
+            console.log('Booking Data:', bookingData); // Debugging
+        
+            try {
+                const response = await fetch('/api/book-seat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+        
+                const data = await response.json();
+                console.log('Booking Response:', data); // Debugging
+        
+                if (data.success) {
+                    // Show success alert with a download option
+                    if (confirm('Download ticket?')) {
+                        downloadTicket(data.bookingId);  // Call downloadTicket function
+                    }
+                    location.reload();
+                } else {
+                    alert('Error booking seat: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Something went wrong! Please try again.");
+            }
+        }                       
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    alert('Logout failed');
+                }
+            });
+        });         
+        
+        function downloadTicket(bookingId) {
+        if (!bookingId) {
+            alert("Invalid booking ID!");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const bus_name = document.getElementById("busSelect").options[document.getElementById("busSelect").selectedIndex].text;
+        // Add ticket details
+        doc.setFontSize(18);
+        doc.text("HTTP://LOCALHOST:3000", 70, 20);
+
+        doc.setFontSize(12);
+        doc.text(`Booking ID: ${bookingId}`, 20, 40);
+        doc.text(`Bus Name: ${bus_name}`, 20, 50);
+        doc.text(`Seat Number: ${selectedSeatNumber}`, 20, 60);
+        doc.text(`Departure: ${document.getElementById("departure").value}`, 20, 70);
+        doc.text(`Destination: ${document.getElementById("destination").value}`, 20, 80);
+        doc.text(`Travel Date: ${document.getElementById("travelDate").value}`, 20, 90);
+        doc.text(`Fare: ${document.getElementById("paymentAmount").value} taka`, 20, 100);
+
+        // Save the PDF file
+        doc.save(`ticket_${bookingId}.pdf`);
+    }
+    </script>
+</body>
+</html>
